@@ -81,6 +81,7 @@ class RankingHandler(BaseHandler):
                 partial = partial or t_partial
             total_score = round(total_score, self.contest.score_precision)
             p.total_score = (total_score, partial)
+            p.nr_submisson = len(list(filter(lambda s: s.official, p.submissions)))
 
         self.r_params = self.render_params()
         self.r_params["show_teams"] = show_teams

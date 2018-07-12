@@ -17,6 +17,7 @@ Download as <a href="{{ url("contest", contest.id, "ranking", "csv") }}">csv</a>
       <th><a href="{{ url("task", task.id) }}">{{ task.name }}</a></th>
       {% endfor %}
       <th>Global</th>
+      <th>Submissons</th>
     </tr>
   </thead>
   <tbody>
@@ -28,7 +29,7 @@ Download as <a href="{{ url("contest", contest.id, "ranking", "csv") }}">csv</a>
       {% if not p.hidden %}
     <tr>
       <td><a href="{{ url("contest", contest.id, "user", p.user.id, "edit") }}">{{ p.user.username }}</a></td>
-      <td>{{ "%s %s"|format(p.user.first_name, p.user.last_name) }}</td>
+      <td>{{ "%s"|format(p.user.first_name) }}</td>
       {% if show_teams %}
         {% if p.team %}
         <td><a href="{{ url("team", p.team_id) }}">{{ p.team.name }}</a></td>
@@ -41,6 +42,7 @@ Download as <a href="{{ url("contest", contest.id, "ranking", "csv") }}">csv</a>
       {% endfor %}
       {% set total_score, partial = p.total_score %}
       <td>{{ total_score }}{% if partial %}*{% endif %}</td>
+      <td>{{ p.nr_submisson }}</td>
     </tr>
       {% endif %}
     {% endfor %}
