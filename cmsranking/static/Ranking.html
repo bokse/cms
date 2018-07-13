@@ -12,6 +12,9 @@ if (typeof jQuery == 'undefined') {
 if (!("EventSource" in window)) {
     document.write(unescape("%3Cscript type='text/javascript' src='lib/eventsource.js'%3E%3C/script%3E"));
 }
+penalty_standard_one = {}; // JOGYO: # of submissions
+penalty_standard_two = {}; // JOGYO: last valid submission time
+penalty_history_store = {};
         </script>
         <script type="text/javascript" src="lib/raphael.js"></script>
         <!--[if lt IE 9]>

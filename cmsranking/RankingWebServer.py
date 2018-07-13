@@ -281,9 +281,9 @@ class DataWatcher(EventSource):
     def callback(self, entity, event, key, *args):
         self.send(entity, "%s %s" % (event, key))
 
-    def score_callback(self, user, task, score):
+    def score_callback(self, user, task, score, num_submissions, last_time):
         # FIXME Use score_precision.
-        self.send("score", "%s %s %0.2f" % (user, task, score))
+        self.send("score", "%s %s %0.2f %d %d" % (user, task, score, num_submissions, last_time))
 
 
 def SubListHandler(request, response, user_id):
@@ -320,7 +320,7 @@ def ScoreHandler(request, response):
     for u_id, tasks in Scoring.store._scores.iteritems():
         for t_id, score in tasks.iteritems():
             if score.get_score() > 0.0:
-                result.setdefault(u_id, dict())[t_id] = score.get_score()
+                result.setdefault(u_id, dict())[t_id] = score.get_score(), len(score._submissions), score._history[-1][0]
 
     response.status_code = 200
     response.headers[b'Timestamp'] = b"%0.6f" % time.time()

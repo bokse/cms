@@ -60,6 +60,11 @@ var HistoryStore = new function () {
 
             if (d[user]) {
                 d[user][task] = score;
+                if(user in penalty_standard_two) {
+                    penalty_standard_two[user] = Math.max(penalty_standard_two[user], time);
+                }else {
+                    penalty_standard_two[user] = time;
+                }
 
                 self.history_t.push([user, task, time, score]);
 

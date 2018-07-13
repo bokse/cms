@@ -580,8 +580,15 @@ var DataStore = new function () {
             success: function (data, status, xhr) {
                 self.score_init_time = parseFloat(xhr.getResponseHeader("Timestamp"));
                 for (var u_id in data) {
+                    penalty_standard_one[u_id] = 0;
+		    penalty_standard_two[u_id] = 0;
+                    penalty_history_store[u_id] = {};
                     for (var t_id in data[u_id]) {
-                        self.set_score(u_id, t_id, data[u_id][t_id]);
+                        self.set_score(u_id, t_id, data[u_id][t_id][0]);
+                        penalty_standard_one[u_id] += data[u_id][t_id][1];
+                        if(penalty_standard_two[u_id] < data[u_id][t_id][2])
+                            penalty_standard_two[u_id] = data[u_id][t_id][2];
+                        penalty_history_store[u_id][t_id] = [data[u_id][t_id][1], data[u_id][t_id][2]];
                     }
                 }
                 self.init_ranks();
@@ -598,6 +605,14 @@ var DataStore = new function () {
         for (var idx in data) {
             var line = data[idx].split(" ");
             self.set_score(line[0], line[1], parseFloat(line[2]));
+            penalty_history_store[line[0]][line[1]] = [parseFloat(line[3]), parseFloat(line[4])];
+            var u_id = line[0];
+            penalty_standard_one[u_id] = 0;
+            penalty_standard_two[u_id] = 0;
+            for(t_id in penalty_history_store[u_id]) {
+                 penalty_standard_one[u_id] += penalty_history_store[u_id][t_id][0];
+                 penalty_standard_two[u_id] = Math.max(penalty_standard_two[u_id], penalty_history_store[u_id][t_id][1]);
+            }
         }
     };
 
@@ -653,6 +668,12 @@ var DataStore = new function () {
 
 
     ////// Rank
+    self.my_comp = (function (a, b) {
+            if(b["global"] != a["global"]) return b["global"] - a["global"];
+            if(penalty_standard_one[b["key"]] != penalty_standard_one[a["key"]]) return penalty_standard_one[a["key"]] - penalty_standard_one[b["key"]];
+            if(penalty_standard_two[b["key"]] != penalty_standard_two[a["key"]]) return penalty_standard_two[a["key"]] - penalty_standard_two[b["key"]];
+            return 0;
+        });
 
     self.init_ranks = function () {
         // Make a list of all users
@@ -663,28 +684,25 @@ var DataStore = new function () {
         }
 
         // Sort it by decreasing score
-        list.sort(function (a, b) {
-            return b["global"] - a["global"];
-        });
+        list.sort(self.my_comp);
 
         // Assign ranks
-        var prev_score = null;
+        var prev_user = null;
         var rank = 0;
         var equal = 1;
 
         for (var i in list) {
             user = list[i];
-            score = user["global"];
 
-            if (score === prev_score) {
+            if (prev_user != null && self.my_comp(user, prev_user) == 0) {
                 equal += 1;
             } else {
-                prev_score = score;
                 rank += equal;
                 equal = 1;
             }
 
             user["rank"] = rank;
+            prev_user = user;
         }
 
         self.score_events.add(self.update_rank);
@@ -699,7 +717,7 @@ var DataStore = new function () {
             var new_rank = 1;
 
             for (var u_id in self.users) {
-                if (self.users[u_id]["global"] > user["global"]) {
+                if (self.my_comp(self.users[u_id], user) > 0) {
                     new_rank += 1;
                 }
             }
@@ -742,7 +760,6 @@ var DataStore = new function () {
          */
 
         // We don't know old_score but we'll see that it's not needed.
-        var new_score = user["global"];
         var old_rank = user["rank"];
         // The new rank is computed by strictly applying the definition:
         //     new_rank = 1 + |{user2 in users, user2.score > user.score}|
@@ -752,16 +769,16 @@ var DataStore = new function () {
             var user2 = self.users[u2_id];
             // this condition is equivalent to
             //     old_score <= user2["global"] < new_score
-            if (old_rank >= user2["rank"] && user2["global"] < new_score) {
+            if (old_rank >= user2["rank"] && self.my_comp(user2, user) > 0) {
                 user2["rank"] += 1;
                 self.rank_events.fire(u2_id, user2, +1);
             // this condition is equivalent to
             //     new_score <= user2["global"] < old_score
-            } else if (new_score <= user2["global"] && user2["rank"] > old_rank) {
+            } else if (self.my_comp(user, user2) >= 0 && user2["rank"] > old_rank) {
                 user2["rank"] -= 1;
                 self.rank_events.fire(u2_id, user2, -1);
             }
-            if (user2["global"] > new_score) {
+            if (self.my_comp(user2, user) < 0) {
                 new_rank += 1;
             }
         }

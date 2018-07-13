@@ -154,7 +154,6 @@ var Scoreboard = new function () {
 <col class=\"sel\"/> \
 <col class=\"rank\"/> \
 <col class=\"f_name\"/> <col/><col/><col/><col/><col/><col/><col/><col/><col/> \
-<col class=\"l_name\"/> <col/><col/><col/><col/><col/><col/><col/><col/><col/> \
 <col class=\"team\"/>";
 
         var contests = DataStore.contest_list;
@@ -188,8 +187,7 @@ var Scoreboard = new function () {
 <tr> \
     <th class=\"sel\"></th> \
     <th class=\"rank\">Rank</th> \
-    <th colspan=\"10\" class=\"f_name\">First Name</th> \
-    <th colspan=\"10\" class=\"l_name\">Last Name</th> \
+    <th colspan=\"10\" class=\"f_name\">Name</th> \
     <th class=\"team\">Team</th>";
 
         var contests = DataStore.contest_list;
@@ -235,8 +233,7 @@ var Scoreboard = new function () {
 <tr class=\"user" + (user["selected"] > 0 ? " selected color" + user["selected"] : "") + "\" data-user=\"" + user["key"] + "\"> \
     <td class=\"sel\"></td> \
     <td class=\"rank\">" + user["rank"] + "</td> \
-    <td colspan=\"10\" class=\"f_name\">" + escapeHTML(user["f_name"]) + "</td> \
-    <td colspan=\"10\" class=\"l_name\">" + escapeHTML(user["l_name"]) + "</td>";
+    <td colspan=\"10\" class=\"f_name\">" + escapeHTML(user["key"]) + "</td>";
 
         if (user['team']) {
             result += " \
@@ -303,9 +300,11 @@ var Scoreboard = new function () {
         var sort_key = self.sort_key;
         if ((a[sort_key] > b[sort_key]) || ((a[sort_key] == b[sort_key]) &&
            ((a["global"] > b["global"]) || ((a["global"] == b["global"]) &&
+           ((penalty_standard_one[a["key"]] < penalty_standard_one[b["key"]]) || ((penalty_standard_one[a["key"]] == penalty_standard_one[b["key"]]) &&
+           ((penalty_standard_two[a["key"]] < penalty_standard_two[b["key"]]) || ((penalty_standard_two[a["key"]] == penalty_standard_two[b["key"]]) &&
            ((a["l_name"] < b["l_name"]) || ((a["l_name"] == b["l_name"]) &&
            ((a["f_name"] < b["f_name"]) || ((a["f_name"] == b["f_name"]) &&
-           (a["key"] <= b["key"]))))))))) {
+           (a["key"] <= b["key"]))))))))))))) {
             return -1;
         } else {
             return +1;
