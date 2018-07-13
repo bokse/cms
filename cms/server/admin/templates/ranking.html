@@ -18,12 +18,15 @@ Download as <a href="{{ url_root }}/contest/{{ contest.id }}/ranking/csv">csv</a
       <th><a href="{{ url_root }}/task/{{ task.id }}">{{ task.name }}</a></th>
       {% end %}
       <th>Global</th>
+      <th># of submissions</th>
+      <th>Last valid submission time</th>
     </tr>
   </thead>
   <tbody>
     {% for p in sorted(contest.participations, key=lambda u: u.user.username) %}
       {% if not p.hidden %}
     <tr>
+      {% set last_submission_timestamps = [] %}
       {% set score = 0.0 %}
       {% set partial = False %}
       <td><a href="{{ url_root }}/contest/{{ contest.id }}/user/{{ p.user.id }}/edit">{{ p.user.username }}</a></td>
@@ -40,9 +43,14 @@ Download as <a href="{{ url_root }}/contest/{{ contest.id }}/ranking/csv">csv</a
         {% set t_score = round(t_score, task.score_precision) %}
         {% set score += t_score %}
         {% set partial = partial or t_partial %}
+        {% if t_score > 0 %}
+        {{ last_submission_timestamps.append(min(map(lambda s: s.timestamp, filter(lambda s: s.task_id == task.id and s.get_result().score == t_score, p.submissions)))) }}
+        {% end %}
       <td>{{ t_score }}{% if t_partial %}*{% end %}</td>
       {% end %}
       <td>{{ round(score, contest.score_precision) }}{% if partial %}*{% end %}</td>
+      <td>{{ len(p.submissions) }}</td>
+      <td>{% if len(last_submission_timestamps) > 0 %}{{ max(last_submission_timestamps) }}{% end %}</td>
     </tr>
       {% end %}
     {% end %}

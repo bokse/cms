@@ -99,6 +99,8 @@ class RankingHandler(BaseHandler):
             row.append("Global")
             if include_partial:
                 row.append("P")
+            row.append("Number of submissions")
+            row.append("Last submission time")
 
             writer.writerow(row)
 
@@ -111,15 +113,19 @@ class RankingHandler(BaseHandler):
                 partial = False
 
                 row = [p.user.username,
-                       "%s %s" % (p.user.first_name, p.user.last_name)]
+                       "%s (%s)" % (p.user.first_name, p.user.last_name)]  # JOGYO: to match with the form "name (school name)", not sure
                 if show_teams:
                     row.append(p.team.name if p.team else "")
+
+                last_submission_timestamps = []
+
                 for task in contest.tasks:
                     t_score, t_partial = task_score(p, task)
                     t_score = round(t_score, task.score_precision)
                     score += t_score
                     partial = partial or t_partial
-
+                    if t_score > 0:
+                        last_submission_timestamps.append(min(map(lambda s: s.timestamp, filter(lambda s: s.task_id == task.id and s.get_result().score == t_score, p.submissions))))
                     row.append(t_score)
                     if include_partial:
                         row.append("*" if t_partial else "")
@@ -127,6 +133,12 @@ class RankingHandler(BaseHandler):
                 row.append(round(score, contest.score_precision))
                 if include_partial:
                     row.append("*" if partial else "")
+
+                row.append("%d" % len(p.submissions))
+                # JOGYO: last column equals to the number of submissions
+                # JOGYO-TODO: how to only count the number of official submissions?
+
+                row.append("%s" % (max(last_submission_timestamps) if len(last_submission_timestamps) > 0 else "-"))
 
                 if sys.version_info >= (3, 0):
                     writer.writerow(row)  # untested
