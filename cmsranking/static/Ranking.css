@@ -801,6 +801,14 @@ abbr {
     opacity: 1;
 }
 
+.penalty-one {
+    background-color: rgba(0,0,0,0.2);
+}
+
+.penalty-two {
+    background-color: rgba(0,0,0,0.2);
+}
+
 .score_0 {
     background-color: #F40000;
     /*background-image: linear-gradient(rgb(204, 0, 0), rgb(244, 0, 0));*/

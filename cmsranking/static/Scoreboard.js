@@ -210,6 +210,8 @@ var Scoreboard = new function () {
 
         result += " \
     <th colspan=\"5\" class=\"score global\" data-sort_key=\"global\">Global</th> \
+    <th colspan=\"4\" class=\"score penalty-one\">Number of submissions</th> \
+    <th colspan=\"5\" class=\"score penalty-two\">Last valid submission time</th> \
 </tr>";
 
         return result;
@@ -226,6 +228,17 @@ var Scoreboard = new function () {
         self.sort();
     };
 
+    self.to_time_str = function(penalty_two_in_seconds) {//
+        var result = "";
+        result += Math.floor(penalty_two_in_seconds / 60 / 60) + ":";
+        var penalty_two_min = Math.floor(penalty_two_in_seconds / 60) % 60;
+        if(penalty_two_min < 10) penalty_two_min = "0" + penalty_two_min;
+        result += penalty_two_min + ":";
+        var penalty_two_sec = penalty_two_in_seconds % 60;
+        if(penalty_two_sec < 10) penalty_two_sec = "0" + penalty_two_sec;
+        result += penalty_two_sec;
+        return result;
+    }
 
     self.make_row = function (user) {
         // See the comment in .make_cols() for the reason we use colspans.
@@ -265,8 +278,13 @@ var Scoreboard = new function () {
 
         var score_class = self.get_score_class(user["global"], DataStore.global_max_score);
         result += " \
-    <td colspan=\"5\" class=\"score global " + score_class + "\" data-sort_key=\"global\">" + round_to_str(user["global"], DataStore.global_score_precision) + "</td> \
-</tr>";
+    <td colspan=\"5\" class=\"score global " + score_class + "\" data-sort_key=\"global\">" + round_to_str(user["global"], DataStore.global_score_precision) + "</td>";
+
+        result += " \
+    <td colspan=\"4\" class=\"score penalty-one\">" + penalty_standard_one[user["key"]] + "</td> \
+    <td colspan=\"5\" class=\"score penalty-two\" data-contest=\"" + contests[0]["key"] + "\">";
+        var penalty_two_in_seconds = penalty_standard_two[user["key"]] - contests[0].begin; // JOGYO: I am assuming that there is only one contest at a time
+        result += self.to_time_str(penalty_two_in_seconds) + "</td></tr>";
 
         return result;
     };
@@ -447,6 +465,11 @@ var Scoreboard = new function () {
                 var task = DataStore.tasks[$this.data("task")];
                 var max_score = task["max_score"];
                 $this.text(round_to_str(score, task["score_precision"]));
+            } else if ($this.hasClass("penalty-one")) {
+                $this.text(penalty_standard_one[user["key"]]);
+            } else if ($this.hasClass("penalty-two")) {
+                var contest = DataStore.contests[$this.data("contest")];
+                $this.text(self.to_time_str(penalty_standard_two[user["key"]] - contest.begin));
             }
 
             // TODO we could user a data-* attribute to store the score class
