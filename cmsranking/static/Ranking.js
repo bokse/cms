@@ -44,4 +44,31 @@ $(document).ready(function() {
         Overview.init();
         Scoreboard.init();
     });
+
+    var intervalId = null
+
+    $("#LogoPanel").click(function (event) {
+        if (intervalId) {
+            console.log('auto scrolling off')
+
+            $('#InnerFrame').stop()
+            clearInterval(intervalId)
+            intervalId = null
+        } else {
+            console.log('auto scrolling on')
+
+            let height = $('#Scoreboard').height() - $('#InnerFrame').height()
+            let interval = height * 20
+            if (interval > 0) {
+                autoScroll(interval)
+                intervalId = setInterval(()=>autoScroll(interval), interval * 2)
+            }
+        }
+    });
 });
+
+function autoScroll(interval) {
+    $('#InnerFrame').animate({ scrollTop:  $('#Scoreboard').height() - $('#InnerFrame').height()}, interval, function() {
+        $(this).animate({ scrollTop: 0 }, interval);
+    });
+}
